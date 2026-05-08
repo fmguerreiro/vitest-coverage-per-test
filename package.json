@@ -1,0 +1,43 @@
+{
+  "name": "vitest-coverage-per-test",
+  "version": "0.0.1",
+  "description": "Vitest reporter that emits per-test runtime coverage attribution as JSON",
+  "license": "MIT",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "prepare": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "peerDependencies": {
+    "vitest": ">=2.0.0"
+  },
+  "dependencies": {
+    "@ampproject/remapping": "^2.3.0",
+    "convert-source-map": "^2.0.0"
+  },
+  "devDependencies": {
+    "@types/convert-source-map": "^2.0.3",
+    "@types/node": "^22.10.0",
+    "@vitest/coverage-v8": "^2.1.5",
+    "typescript": "^5.6.3",
+    "vitest": "^2.1.5"
+  }
+}
