@@ -60,7 +60,7 @@ describe("PerTestCoverageReporter", () => {
     reporter.onTaskUpdate([
       makePack("task-1", ["src/used.ts"]),
     ]);
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect(written).toEqual({
@@ -87,7 +87,7 @@ describe("PerTestCoverageReporter", () => {
       makePack("task-1", ["src/a.ts", "src/b.ts"]),
       makePack("task-2", ["src/b.ts", "src/c.ts"]),
     ]);
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect(written).toEqual({
@@ -114,7 +114,7 @@ describe("PerTestCoverageReporter", () => {
       makePack("task-1", ["src/used.ts"]),
       makePack("task-2", ["src/other.ts"]),
     ]);
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect(written).toEqual({
@@ -136,7 +136,7 @@ describe("PerTestCoverageReporter", () => {
     reporter.onTaskUpdate([
       ["task-suite", undefined, {}],
     ]);
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect(written).toEqual({ version: 1, tests: {} });
@@ -160,10 +160,26 @@ describe("PerTestCoverageReporter", () => {
     reporter.onTaskUpdate([
       makePack("suite-1", ["src/used.ts"]),
     ]);
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect(written).toEqual({ version: 1, tests: {} });
+  });
+
+  it("skips writing output when onFinished receives unhandled errors", () => {
+    const outFile = join(tmpDir, "output.json");
+    const projectRoot = tmpDir;
+    const reporter = new PerTestCoverageReporter({ outFile });
+    const ctx = makeFakeVitest(projectRoot);
+    reporter.onInit(ctx);
+
+    const task = makeTestTask("task-1", join(projectRoot, "tests/foo.spec.ts"));
+    ctx.state.idMap.set("task-1", task);
+    reporter.onTaskUpdate([makePack("task-1", ["src/used.ts"])]);
+
+    reporter.onFinished(undefined, [new Error("worker crashed")]);
+
+    expect(() => readFileSync(outFile, "utf-8")).toThrow();
   });
 
   it("writes version: 1 envelope", () => {
@@ -173,7 +189,7 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    reporter.onFinished();
+    reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect((written as { version: number }).version).toEqual(1);
