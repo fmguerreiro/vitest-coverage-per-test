@@ -10,11 +10,6 @@ type ScriptCoverage = inspector.Profiler.ScriptCoverage;
  */
 let activeSession: inspector.Session | null = null;
 
-/**
- * URL-keyed baseline of summed call counts taken before each test.
- */
-let baseline: Map<string, number> = new Map();
-
 const projectRoot = process.cwd();
 
 async function openSession(): Promise<inspector.Session> {
@@ -96,17 +91,19 @@ function fileUrlToProjectRelative(fileUrl: string): string | null {
  * ```
  *
  * Requires coverage.provider: "v8" in your vitest config.
- * Not safe for concurrent tests (it.concurrent) within a single spec file.
+ * Safe for concurrent tests (it.concurrent): the baseline is stored on each
+ * test's own context.task.meta rather than in shared module state.
  */
 export function installPerTestCoverageHooks(): void {
-  beforeEach(async () => {
+  beforeEach(async (context) => {
     const session = await openSession();
-    baseline = await takeSnapshot(session);
+    context.task.meta._perTestBaseline = await takeSnapshot(session);
   });
 
   afterEach(async (context) => {
     const session = await openSession();
     const current = await takeSnapshot(session);
+    const baseline = context.task.meta._perTestBaseline ?? new Map<string, number>();
 
     const coveredFiles: string[] = [];
     for (const [url, count] of current) {
