@@ -10,6 +10,12 @@ type ScriptCoverage = inspector.Profiler.ScriptCoverage;
  */
 let activeSession: inspector.Session | null = null;
 
+/**
+ * Per-task baseline snapshots. Keyed on the task object so concurrent tests
+ * cannot corrupt each other, and so the Map is never serialized over IPC.
+ */
+const baselines = new WeakMap<object, Map<string, number>>();
+
 const projectRoot = process.cwd();
 
 async function openSession(): Promise<inspector.Session> {
@@ -97,13 +103,13 @@ function fileUrlToProjectRelative(fileUrl: string): string | null {
 export function installPerTestCoverageHooks(): void {
   beforeEach(async (context) => {
     const session = await openSession();
-    context.task.meta._perTestBaseline = await takeSnapshot(session);
+    baselines.set(context.task, await takeSnapshot(session));
   });
 
   afterEach(async (context) => {
     const session = await openSession();
     const current = await takeSnapshot(session);
-    const baseline = context.task.meta._perTestBaseline ?? new Map<string, number>();
+    const baseline = baselines.get(context.task) ?? new Map<string, number>();
 
     const coveredFiles: string[] = [];
     for (const [url, count] of current) {
