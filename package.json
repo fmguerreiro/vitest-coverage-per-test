@@ -20,6 +20,7 @@
     "build": "tsc -p tsconfig.json",
     "dev": "tsc -p tsconfig.json --watch",
     "prepare": "tsc -p tsconfig.json",
+    "prepack": "tsc -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -28,10 +29,6 @@
   },
   "peerDependencies": {
     "vitest": ">=2.0.0"
-  },
-  "dependencies": {
-    "@ampproject/remapping": "^2.3.0",
-    "convert-source-map": "^2.0.0"
   },
   "devDependencies": {
     "@types/convert-source-map": "^2.0.3",
