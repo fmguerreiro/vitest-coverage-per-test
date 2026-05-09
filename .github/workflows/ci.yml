@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        vitest-version: ["^2.1.0", "^3.0.0", "^4.0.0"]
+        vitest-version: ["2", "3", "4"]
 
     steps:
       - uses: actions/checkout@v4
