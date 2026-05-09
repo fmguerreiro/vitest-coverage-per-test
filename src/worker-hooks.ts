@@ -75,13 +75,13 @@ async function takeSnapshot(session: inspector.Session): Promise<Map<string, num
   });
 }
 
-function fileUrlToProjectRelative(fileUrl: string): string {
+function fileUrlToProjectRelative(fileUrl: string): string | null {
   const absolutePath = fileURLToPath(fileUrl);
   const prefix = projectRoot + "/";
-  const relative = absolutePath.startsWith(prefix)
-    ? absolutePath.slice(prefix.length)
-    : absolutePath;
-  return relative.replace(/\\/g, "/");
+  if (!absolutePath.startsWith(prefix)) {
+    return null;
+  }
+  return absolutePath.slice(prefix.length).replace(/\\/g, "/");
 }
 
 /**
@@ -112,7 +112,10 @@ export function installPerTestCoverageHooks(): void {
     for (const [url, count] of current) {
       const baseCount = baseline.get(url) ?? 0;
       if (count > baseCount) {
-        coveredFiles.push(fileUrlToProjectRelative(url));
+        const relative = fileUrlToProjectRelative(url);
+        if (relative !== null) {
+          coveredFiles.push(relative);
+        }
       }
     }
 
