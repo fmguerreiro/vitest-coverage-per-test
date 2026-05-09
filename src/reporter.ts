@@ -1,12 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { Reporter, Vitest, TaskResultPack } from "vitest";
+import type { Reporter, Vitest, TaskResultPack, Task } from "vitest";
 import type { ReporterOptions, PerTestCoverageOutput } from "./types.js";
 
 export class PerTestCoverageReporter implements Reporter {
   private readonly outFile: string;
   private readonly accumulator: Map<string, Set<string>> = new Map();
-  private ctx: Vitest | undefined;
+  private projectRoot: string = process.cwd();
+  private idMap: Map<string, Task> = new Map();
 
   constructor(options: ReporterOptions) {
     if (!options.outFile) {
@@ -18,7 +19,8 @@ export class PerTestCoverageReporter implements Reporter {
   }
 
   onInit(ctx: Vitest): void {
-    this.ctx = ctx;
+    this.projectRoot = ctx.config.root;
+    this.idMap = ctx.state.idMap;
   }
 
   onTaskUpdate(packs: TaskResultPack[]): void {
@@ -31,7 +33,7 @@ export class PerTestCoverageReporter implements Reporter {
         continue;
       }
 
-      const task = this.ctx?.state.idMap.get(taskId);
+      const task = this.idMap.get(taskId);
       if (!task) {
         continue;
       }
@@ -39,8 +41,7 @@ export class PerTestCoverageReporter implements Reporter {
         continue;
       }
 
-      const specFilePath = task.file.filepath;
-      const relativeSpecFile = this.toRelative(specFilePath);
+      const relativeSpecFile = this.toRelative(task.file.filepath);
 
       let covered = this.accumulator.get(relativeSpecFile);
       if (!covered) {
@@ -59,14 +60,12 @@ export class PerTestCoverageReporter implements Reporter {
       tests[specFile] = Array.from(sources).sort();
     }
     const output: PerTestCoverageOutput = { version: 1, tests };
-    const projectRoot = this.ctx?.config.root ?? process.cwd();
-    const absoluteOutFile = resolve(projectRoot, this.outFile);
+    const absoluteOutFile = resolve(this.projectRoot, this.outFile);
     writeFileSync(absoluteOutFile, JSON.stringify(output, null, 2) + "\n", "utf-8");
   }
 
   private toRelative(absolutePath: string): string {
-    const projectRoot = this.ctx?.config.root ?? process.cwd();
-    const prefix = projectRoot + "/";
+    const prefix = this.projectRoot + "/";
     const relative = absolutePath.startsWith(prefix)
       ? absolutePath.slice(prefix.length)
       : absolutePath;

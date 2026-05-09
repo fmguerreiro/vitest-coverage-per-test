@@ -6,7 +6,7 @@ type ScriptCoverage = inspector.Profiler.ScriptCoverage;
 
 /**
  * V8 Inspector session kept open for the lifetime of the worker.
- * Opened lazily on first call to installPerTestCoverageHooks().
+ * Opened lazily on first installPerTestCoverageHooks() call.
  */
 let activeSession: inspector.Session | null = null;
 
@@ -15,18 +15,31 @@ let activeSession: inspector.Session | null = null;
  */
 let baseline: Map<string, number> = new Map();
 
-function openSession(): inspector.Session {
+const projectRoot = process.cwd();
+
+async function openSession(): Promise<inspector.Session> {
   if (activeSession) {
     return activeSession;
   }
-  activeSession = new inspector.Session();
-  activeSession.connect();
-  activeSession.post("Profiler.enable", undefined, () => {});
-  activeSession.post(
-    "Profiler.startPreciseCoverage",
-    { callCount: true, detailed: false },
-    () => {}
-  );
+  const session = new inspector.Session();
+  session.connect();
+  await new Promise<void>((resolve, reject) => {
+    session.post("Profiler.enable", (error) => {
+      if (error) { reject(error); return; }
+      resolve();
+    });
+  });
+  await new Promise<void>((resolve, reject) => {
+    session.post(
+      "Profiler.startPreciseCoverage",
+      { callCount: true, detailed: false },
+      (error) => {
+        if (error) { reject(error); return; }
+        resolve();
+      }
+    );
+  });
+  activeSession = session;
   return activeSession;
 }
 
@@ -64,7 +77,6 @@ async function takeSnapshot(session: inspector.Session): Promise<Map<string, num
 
 function fileUrlToProjectRelative(fileUrl: string): string {
   const absolutePath = fileURLToPath(fileUrl);
-  const projectRoot = process.cwd();
   const prefix = projectRoot + "/";
   const relative = absolutePath.startsWith(prefix)
     ? absolutePath.slice(prefix.length)
@@ -82,15 +94,18 @@ function fileUrlToProjectRelative(fileUrl: string): string {
  * import { installPerTestCoverageHooks } from "vitest-coverage-per-test";
  * installPerTestCoverageHooks();
  * ```
+ *
+ * Requires coverage.provider: "v8" in your vitest config.
+ * Not safe for concurrent tests (it.concurrent) within a single spec file.
  */
 export function installPerTestCoverageHooks(): void {
   beforeEach(async () => {
-    const session = openSession();
+    const session = await openSession();
     baseline = await takeSnapshot(session);
   });
 
   afterEach(async (context) => {
-    const session = openSession();
+    const session = await openSession();
     const current = await takeSnapshot(session);
 
     const coveredFiles: string[] = [];
