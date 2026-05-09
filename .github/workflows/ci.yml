@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: test (vitest ${{ matrix.vitest-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        vitest-version: ["2", "3", "4"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install vitest@${{ matrix.vitest-version }} @vitest/coverage-v8@${{ matrix.vitest-version }}
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
