@@ -66,8 +66,8 @@ export class PerTestCoverageReporter implements Reporter {
    * Skips writing output when there are unhandled errors, because the
    * accumulated coverage data may be incomplete.
    */
-  onTestRunEnd(_testModules: unknown, unhandledErrors: unknown[]): void {
-    if (unhandledErrors.length > 0) return;
+  onTestRunEnd(_testModules: unknown, unhandledErrors?: unknown[]): void {
+    if (unhandledErrors && unhandledErrors.length > 0) return;
     this.writeOutput();
   }
 
@@ -102,8 +102,8 @@ export class PerTestCoverageReporter implements Reporter {
    * Skips writing output when there are unhandled errors, because the
    * accumulated coverage data may be incomplete.
    */
-  onFinished(_files: unknown, errors: unknown[]): void {
-    if (errors.length > 0) return;
+  onFinished(_files?: unknown, errors?: unknown[]): void {
+    if (errors && errors.length > 0) return;
     this.writeOutput();
   }
 

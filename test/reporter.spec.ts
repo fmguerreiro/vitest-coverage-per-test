@@ -194,4 +194,17 @@ describe("PerTestCoverageReporter", () => {
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
     expect((written as { version: number }).version).toEqual(1);
   });
+
+  it("writes output when onFinished is called with no arguments", () => {
+    const outFile = join(tmpDir, "output.json");
+    const projectRoot = tmpDir;
+    const reporter = new PerTestCoverageReporter({ outFile });
+    const ctx = makeFakeVitest(projectRoot);
+    reporter.onInit(ctx);
+
+    reporter.onFinished();
+
+    const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
+    expect(written).toEqual({ version: 1, tests: {} });
+  });
 });
