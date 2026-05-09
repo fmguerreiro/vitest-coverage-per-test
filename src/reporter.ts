@@ -63,8 +63,11 @@ export class PerTestCoverageReporter implements Reporter {
 
   /**
    * vitest v4 hook: called when the test run ends.
+   * Skips writing output when there are unhandled errors, because the
+   * accumulated coverage data may be incomplete.
    */
-  onTestRunEnd(): void {
+  onTestRunEnd(_testModules: unknown, unhandledErrors: unknown[]): void {
+    if (unhandledErrors.length > 0) return;
     this.writeOutput();
   }
 
@@ -96,8 +99,11 @@ export class PerTestCoverageReporter implements Reporter {
 
   /**
    * vitest v2/v3 hook: called when the test run finishes.
+   * Skips writing output when there are unhandled errors, because the
+   * accumulated coverage data may be incomplete.
    */
-  onFinished(): void {
+  onFinished(_files: unknown, errors: unknown[]): void {
+    if (errors.length > 0) return;
     this.writeOutput();
   }
 
