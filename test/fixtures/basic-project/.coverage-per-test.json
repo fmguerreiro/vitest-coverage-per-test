@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "tests": {
+    "tests/math.spec.ts": [
+      "src/worker-hooks.ts",
+      "test/fixtures/basic-project/src/math.ts",
+      "test/fixtures/basic-project/tests/math.spec.ts"
+    ],
+    "tests/strings.spec.ts": [
+      "src/worker-hooks.ts",
+      "test/fixtures/basic-project/src/strings.ts",
+      "test/fixtures/basic-project/tests/strings.spec.ts"
+    ]
+  }
+}
