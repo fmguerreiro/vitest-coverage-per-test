@@ -10,6 +10,7 @@
  * ```
  *
  * Requires coverage.provider: "v8" in your vitest config.
- * Not safe for concurrent tests (it.concurrent) within a single spec file.
+ * Safe for concurrent tests (it.concurrent): the baseline is stored on each
+ * test's own context.task.meta rather than in shared module state.
  */
 export declare function installPerTestCoverageHooks(): void;

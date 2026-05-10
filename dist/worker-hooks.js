@@ -7,9 +7,10 @@ import { beforeEach, afterEach } from "vitest";
  */
 let activeSession = null;
 /**
- * URL-keyed baseline of summed call counts taken before each test.
+ * Per-task baseline snapshots. Keyed on the task object so concurrent tests
+ * cannot corrupt each other, and so the Map is never serialized over IPC.
  */
-let baseline = new Map();
+const baselines = new WeakMap();
 const projectRoot = process.cwd();
 async function openSession() {
     if (activeSession) {
@@ -71,10 +72,10 @@ async function takeSnapshot(session) {
 function fileUrlToProjectRelative(fileUrl) {
     const absolutePath = fileURLToPath(fileUrl);
     const prefix = projectRoot + "/";
-    const relative = absolutePath.startsWith(prefix)
-        ? absolutePath.slice(prefix.length)
-        : absolutePath;
-    return relative.replace(/\\/g, "/");
+    if (!absolutePath.startsWith(prefix)) {
+        return null;
+    }
+    return absolutePath.slice(prefix.length).replace(/\\/g, "/");
 }
 /**
  * Installs global beforeEach/afterEach hooks that snapshot V8 coverage
@@ -88,21 +89,26 @@ function fileUrlToProjectRelative(fileUrl) {
  * ```
  *
  * Requires coverage.provider: "v8" in your vitest config.
- * Not safe for concurrent tests (it.concurrent) within a single spec file.
+ * Safe for concurrent tests (it.concurrent): the baseline is stored on each
+ * test's own context.task.meta rather than in shared module state.
  */
 export function installPerTestCoverageHooks() {
-    beforeEach(async () => {
+    beforeEach(async (context) => {
         const session = await openSession();
-        baseline = await takeSnapshot(session);
+        baselines.set(context.task, await takeSnapshot(session));
     });
     afterEach(async (context) => {
         const session = await openSession();
         const current = await takeSnapshot(session);
+        const baseline = baselines.get(context.task) ?? new Map();
         const coveredFiles = [];
         for (const [url, count] of current) {
             const baseCount = baseline.get(url) ?? 0;
             if (count > baseCount) {
-                coveredFiles.push(fileUrlToProjectRelative(url));
+                const relative = fileUrlToProjectRelative(url);
+                if (relative !== null) {
+                    coveredFiles.push(relative);
+                }
             }
         }
         context.task.meta.perTestCoverage = coveredFiles;
