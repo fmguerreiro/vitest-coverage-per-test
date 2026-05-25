@@ -2,6 +2,17 @@
   "name": "vitest-coverage-per-test",
   "version": "0.0.1",
   "description": "Vitest reporter that emits per-test runtime coverage attribution as JSON",
+  "keywords": [
+    "vitest",
+    "vitest-plugin",
+    "coverage",
+    "code-coverage",
+    "test-coverage",
+    "reporter",
+    "testing",
+    "typescript",
+    "javascript"
+  ],
   "license": "MIT",
   "type": "module",
   "main": "dist/index.js",
