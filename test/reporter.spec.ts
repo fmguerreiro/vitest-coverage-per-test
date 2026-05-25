@@ -17,7 +17,7 @@ function makeFakeVitest(root: string): VitestLike {
   };
 }
 
-function makeTestTask(_id: string, filepath: string): TaskLike {
+function makeTestTask(filepath: string): TaskLike {
   return {
     type: "test",
     file: { filepath },
@@ -55,7 +55,7 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task = makeTestTask("task-1", join(projectRoot, "tests/foo.spec.ts"));
+    const task = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
     ctx.state.idMap.set("task-1", task);
 
     reporter.onTaskUpdate([
@@ -79,8 +79,8 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task1 = makeTestTask("task-1", join(projectRoot, "tests/foo.spec.ts"));
-    const task2 = makeTestTask("task-2", join(projectRoot, "tests/foo.spec.ts"));
+    const task1 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
+    const task2 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
     ctx.state.idMap.set("task-1", task1);
     ctx.state.idMap.set("task-2", task2);
 
@@ -106,8 +106,8 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task1 = makeTestTask("task-1", join(projectRoot, "tests/foo.spec.ts"));
-    const task2 = makeTestTask("task-2", join(projectRoot, "tests/bar.spec.ts"));
+    const task1 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
+    const task2 = makeTestTask(join(projectRoot, "tests/bar.spec.ts"));
     ctx.state.idMap.set("task-1", task1);
     ctx.state.idMap.set("task-2", task2);
 
@@ -172,7 +172,7 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task = makeTestTask("task-1", join(projectRoot, "tests/foo.spec.ts"));
+    const task = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
     ctx.state.idMap.set("task-1", task);
     reporter.onTaskUpdate([makePack("task-1", ["src/used.ts"])]);
 
