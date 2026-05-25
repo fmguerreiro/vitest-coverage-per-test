@@ -179,7 +179,7 @@ describe("PerTestCoverageReporter", () => {
 
     reporter.onFinished(undefined, [new Error("worker crashed")]);
 
-    expect(() => readFileSync(outFile, "utf-8")).toThrow();
+    expect(() => readFileSync(outFile, "utf-8")).toThrowError(/ENOENT/);
   });
 
   it("writes version: 1 envelope", () => {
