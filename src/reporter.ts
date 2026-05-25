@@ -1,7 +1,28 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { Reporter, Vitest, TaskResultPack, Task } from "vitest";
 import type { ReporterOptions, PerTestCoverageOutput } from "./types.js";
+
+/**
+ * Duck-typed vitest shapes. The named exports and their signatures diverge
+ * across vitest v2/v3/v4 (e.g. v4 drops the Vitest/Task/Reporter exports and
+ * renames TaskResultPack to RunnerTaskResultPack), so we type only the fields
+ * we read and let vitest dispatch to these methods by name at runtime.
+ */
+interface PerTestMeta {
+  perTestCoverage?: string[];
+}
+
+interface VitestLike {
+  config: { root: string };
+  state: { idMap: Map<string, TaskLike> };
+}
+
+interface TaskLike {
+  type: string;
+  file: { filepath: string };
+}
+
+type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
 
 /**
  * Duck-typed shape of vitest v4's TestCase, which may not be available as a
@@ -9,7 +30,7 @@ import type { ReporterOptions, PerTestCoverageOutput } from "./types.js";
  */
 interface TestCaseLike {
   type: "test";
-  meta(): { perTestCoverage?: string[] };
+  meta(): PerTestMeta;
   module: { relativeModuleId: string };
 }
 
@@ -25,11 +46,11 @@ function isTestCaseLike(value: unknown): value is TestCaseLike {
   );
 }
 
-export class PerTestCoverageReporter implements Reporter {
+export class PerTestCoverageReporter {
   private readonly outFile: string;
   private readonly accumulator: Map<string, Set<string>> = new Map();
   private projectRoot: string = process.cwd();
-  private idMap: Map<string, Task> = new Map();
+  private idMap: Map<string, TaskLike> = new Map();
 
   constructor(options: ReporterOptions) {
     if (!options.outFile) {
@@ -40,7 +61,7 @@ export class PerTestCoverageReporter implements Reporter {
     this.outFile = options.outFile;
   }
 
-  onInit(ctx: Vitest): void {
+  onInit(ctx: VitestLike): void {
     this.projectRoot = ctx.config.root;
     this.idMap = ctx.state.idMap;
   }
@@ -74,7 +95,7 @@ export class PerTestCoverageReporter implements Reporter {
   /**
    * vitest v2/v3 hook: called on each batch of task updates.
    */
-  onTaskUpdate(packs: TaskResultPack[]): void {
+  onTaskUpdate(packs: TaskResultPackLike[]): void {
     for (const [taskId, , meta] of packs) {
       if (!meta || !Array.isArray(meta.perTestCoverage)) {
         continue;
