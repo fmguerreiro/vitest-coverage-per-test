@@ -1,13 +1,10 @@
-import type { ReporterOptions } from "./types.js";
+import type { ReporterOptions, PerTestMeta } from "./types.js";
 /**
  * Duck-typed vitest shapes. The named exports and their signatures diverge
- * across vitest v2/v3/v4 (e.g. v4 drops the Vitest/Task/Reporter exports and
- * renames TaskResultPack to RunnerTaskResultPack), so we type only the fields
- * we read and let vitest dispatch to these methods by name at runtime.
+ * across vitest v2/v3/v4 (e.g. v4 drops the Vitest/Task/Reporter exports), so
+ * we type only the fields we read and let vitest dispatch to these methods by
+ * name at runtime.
  */
-interface PerTestMeta {
-    perTestCoverage?: string[];
-}
 interface VitestLike {
     config: {
         root: string;
@@ -22,8 +19,20 @@ interface TaskLike {
         filepath: string;
     };
 }
-type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
-export declare class PerTestCoverageReporter {
+type TaskResultPackLike = [id: string, result: unknown, meta?: PerTestMeta];
+/**
+ * Local reporter contract. vitest's own Reporter export is unavailable in v4,
+ * so we name the hooks we implement here to keep method-name and signature
+ * checks without depending on a versioned export.
+ */
+interface ReporterLike {
+    onInit(ctx: VitestLike): void;
+    onTestCaseResult(testCase: unknown): void;
+    onTestRunEnd(testModules: unknown, unhandledErrors?: unknown[]): void;
+    onTaskUpdate(packs: TaskResultPackLike[]): void;
+    onFinished(files?: unknown, errors?: unknown[]): void;
+}
+export declare class PerTestCoverageReporter implements ReporterLike {
     private readonly outFile;
     private readonly accumulator;
     private projectRoot;
