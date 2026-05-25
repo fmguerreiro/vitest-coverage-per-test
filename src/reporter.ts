@@ -1,17 +1,13 @@
 import { writeFileSync } from "node:fs";
 import { resolve } from "node:path";
-import type { ReporterOptions, PerTestCoverageOutput } from "./types.js";
+import type { ReporterOptions, PerTestCoverageOutput, PerTestMeta } from "./types.js";
 
 /**
  * Duck-typed vitest shapes. The named exports and their signatures diverge
- * across vitest v2/v3/v4 (e.g. v4 drops the Vitest/Task/Reporter exports and
- * renames TaskResultPack to RunnerTaskResultPack), so we type only the fields
- * we read and let vitest dispatch to these methods by name at runtime.
+ * across vitest v2/v3/v4 (e.g. v4 drops the Vitest/Task/Reporter exports), so
+ * we type only the fields we read and let vitest dispatch to these methods by
+ * name at runtime.
  */
-export interface PerTestMeta {
-  perTestCoverage?: string[];
-}
-
 export interface VitestLike {
   config: { root: string };
   state: { idMap: Map<string, TaskLike> };
@@ -22,7 +18,20 @@ export interface TaskLike {
   file: { filepath: string };
 }
 
-export type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
+export type TaskResultPackLike = [id: string, result: unknown, meta?: PerTestMeta];
+
+/**
+ * Local reporter contract. vitest's own Reporter export is unavailable in v4,
+ * so we name the hooks we implement here to keep method-name and signature
+ * checks without depending on a versioned export.
+ */
+interface ReporterLike {
+  onInit(ctx: VitestLike): void;
+  onTestCaseResult(testCase: unknown): void;
+  onTestRunEnd(testModules: unknown, unhandledErrors?: unknown[]): void;
+  onTaskUpdate(packs: TaskResultPackLike[]): void;
+  onFinished(files?: unknown, errors?: unknown[]): void;
+}
 
 /**
  * Duck-typed shape of vitest v4's TestCase, which may not be available as a
@@ -46,7 +55,7 @@ function isTestCaseLike(value: unknown): value is TestCaseLike {
   );
 }
 
-export class PerTestCoverageReporter {
+export class PerTestCoverageReporter implements ReporterLike {
   private readonly outFile: string;
   private readonly accumulator: Map<string, Set<string>> = new Map();
   private projectRoot: string = process.cwd();

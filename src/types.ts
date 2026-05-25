@@ -15,13 +15,17 @@ export interface ReporterOptions {
   outFile: string;
 }
 
+/**
+ * Per-test coverage payload attached to a task's meta.
+ *
+ * Project-relative source file paths covered while this test ran.
+ * Populated by installPerTestCoverageHooks() in the worker process.
+ * Read by PerTestCoverageReporter in the main process.
+ */
+export interface PerTestMeta {
+  perTestCoverage?: string[];
+}
+
 declare module "@vitest/runner" {
-  interface TaskMeta {
-    /**
-     * Project-relative source file paths covered while this test ran.
-     * Populated by installPerTestCoverageHooks() in the worker process.
-     * Read by PerTestCoverageReporter in the main process.
-     */
-    perTestCoverage?: string[];
-  }
+  interface TaskMeta extends PerTestMeta {}
 }
