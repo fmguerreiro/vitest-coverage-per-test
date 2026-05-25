@@ -55,11 +55,11 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
-    ctx.state.idMap.set("task-1", task);
+    const taskId = "task-1";
+    ctx.state.idMap.set(taskId, makeTestTask(join(projectRoot, "tests/foo.spec.ts")));
 
     reporter.onTaskUpdate([
-      makePack("task-1", ["src/used.ts"]),
+      makePack(taskId, ["src/used.ts"]),
     ]);
     reporter.onFinished(undefined, []);
 
@@ -79,14 +79,14 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task1 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
-    const task2 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
-    ctx.state.idMap.set("task-1", task1);
-    ctx.state.idMap.set("task-2", task2);
+    const taskId1 = "task-1";
+    const taskId2 = "task-2";
+    ctx.state.idMap.set(taskId1, makeTestTask(join(projectRoot, "tests/foo.spec.ts")));
+    ctx.state.idMap.set(taskId2, makeTestTask(join(projectRoot, "tests/foo.spec.ts")));
 
     reporter.onTaskUpdate([
-      makePack("task-1", ["src/a.ts", "src/b.ts"]),
-      makePack("task-2", ["src/b.ts", "src/c.ts"]),
+      makePack(taskId1, ["src/a.ts", "src/b.ts"]),
+      makePack(taskId2, ["src/b.ts", "src/c.ts"]),
     ]);
     reporter.onFinished(undefined, []);
 
@@ -106,14 +106,14 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task1 = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
-    const task2 = makeTestTask(join(projectRoot, "tests/bar.spec.ts"));
-    ctx.state.idMap.set("task-1", task1);
-    ctx.state.idMap.set("task-2", task2);
+    const taskId1 = "task-1";
+    const taskId2 = "task-2";
+    ctx.state.idMap.set(taskId1, makeTestTask(join(projectRoot, "tests/foo.spec.ts")));
+    ctx.state.idMap.set(taskId2, makeTestTask(join(projectRoot, "tests/bar.spec.ts")));
 
     reporter.onTaskUpdate([
-      makePack("task-1", ["src/used.ts"]),
-      makePack("task-2", ["src/other.ts"]),
+      makePack(taskId1, ["src/used.ts"]),
+      makePack(taskId2, ["src/other.ts"]),
     ]);
     reporter.onFinished(undefined, []);
 
@@ -150,14 +150,15 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
+    const suiteId = "suite-1";
     const suiteTask: TaskLike = {
       type: "suite",
       file: { filepath: join(projectRoot, "tests/foo.spec.ts") },
     };
-    ctx.state.idMap.set("suite-1", suiteTask);
+    ctx.state.idMap.set(suiteId, suiteTask);
 
     reporter.onTaskUpdate([
-      makePack("suite-1", ["src/used.ts"]),
+      makePack(suiteId, ["src/used.ts"]),
     ]);
     reporter.onFinished(undefined, []);
 
@@ -172,9 +173,9 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const task = makeTestTask(join(projectRoot, "tests/foo.spec.ts"));
-    ctx.state.idMap.set("task-1", task);
-    reporter.onTaskUpdate([makePack("task-1", ["src/used.ts"])]);
+    const taskId = "task-1";
+    ctx.state.idMap.set(taskId, makeTestTask(join(projectRoot, "tests/foo.spec.ts")));
+    reporter.onTaskUpdate([makePack(taskId, ["src/used.ts"])]);
 
     reporter.onFinished(undefined, [new Error("worker crashed")]);
 
@@ -191,7 +192,7 @@ describe("PerTestCoverageReporter", () => {
     reporter.onFinished(undefined, []);
 
     const written = JSON.parse(readFileSync(outFile, "utf-8")) as unknown;
-    expect((written as { version: number }).version).toEqual(1);
+    expect(written).toEqual({ version: 1, tests: {} });
   });
 
   it("writes output when onFinished is called with no arguments", () => {
