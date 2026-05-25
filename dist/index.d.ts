@@ -2,7 +2,7 @@ import { PerTestCoverageReporter } from "./reporter.js";
 import type { ReporterOptions } from "./types.js";
 export { PerTestCoverageReporter };
 export { installPerTestCoverageHooks } from "./worker-hooks.js";
-export type { PerTestCoverageOutput, ReporterOptions } from "./types.js";
+export type { PerTestCoverageOutput, ReporterOptions, PerTestMeta } from "./types.js";
 /**
  * Factory function that returns a configured PerTestCoverageReporter instance.
  *
