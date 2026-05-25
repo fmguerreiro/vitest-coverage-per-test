@@ -8,21 +8,21 @@ import type { ReporterOptions, PerTestCoverageOutput } from "./types.js";
  * renames TaskResultPack to RunnerTaskResultPack), so we type only the fields
  * we read and let vitest dispatch to these methods by name at runtime.
  */
-interface PerTestMeta {
+export interface PerTestMeta {
   perTestCoverage?: string[];
 }
 
-interface VitestLike {
+export interface VitestLike {
   config: { root: string };
   state: { idMap: Map<string, TaskLike> };
 }
 
-interface TaskLike {
+export interface TaskLike {
   type: string;
   file: { filepath: string };
 }
 
-type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
+export type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
 
 /**
  * Duck-typed shape of vitest v4's TestCase, which may not be available as a

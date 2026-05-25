@@ -5,10 +5,10 @@ import type { ReporterOptions } from "./types.js";
  * renames TaskResultPack to RunnerTaskResultPack), so we type only the fields
  * we read and let vitest dispatch to these methods by name at runtime.
  */
-interface PerTestMeta {
+export interface PerTestMeta {
     perTestCoverage?: string[];
 }
-interface VitestLike {
+export interface VitestLike {
     config: {
         root: string;
     };
@@ -16,13 +16,13 @@ interface VitestLike {
         idMap: Map<string, TaskLike>;
     };
 }
-interface TaskLike {
+export interface TaskLike {
     type: string;
     file: {
         filepath: string;
     };
 }
-type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
+export type TaskResultPackLike = [id: string, result: unknown, meta: PerTestMeta];
 export declare class PerTestCoverageReporter {
     private readonly outFile;
     private readonly accumulator;
@@ -55,4 +55,3 @@ export declare class PerTestCoverageReporter {
     private writeOutput;
     private toRelative;
 }
-export {};

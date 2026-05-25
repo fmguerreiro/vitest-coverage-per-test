@@ -3,30 +3,31 @@ import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { PerTestCoverageReporter } from "../src/reporter.js";
-import type { Vitest, TaskResultPack } from "vitest";
-import type { Task, Test } from "@vitest/runner";
+import type {
+  VitestLike,
+  TaskLike,
+  TaskResultPackLike,
+} from "../src/reporter.js";
 
-function makeFakeVitest(root: string): Vitest {
-  const idMap = new Map<string, Task>();
+function makeFakeVitest(root: string): VitestLike {
+  const idMap = new Map<string, TaskLike>();
   return {
     config: { root },
     state: { idMap },
-  } as unknown as Vitest;
+  };
 }
 
-function makeTestTask(id: string, filepath: string): Test {
+function makeTestTask(_id: string, filepath: string): TaskLike {
   return {
-    id,
     type: "test",
-    meta: {},
     file: { filepath },
-  } as unknown as Test;
+  };
 }
 
 function makePack(
   id: string,
   sourcePaths: string[]
-): TaskResultPack {
+): TaskResultPackLike {
   return [id, undefined, { perTestCoverage: sourcePaths }];
 }
 
@@ -149,12 +150,10 @@ describe("PerTestCoverageReporter", () => {
     const ctx = makeFakeVitest(projectRoot);
     reporter.onInit(ctx);
 
-    const suiteTask = {
-      id: "suite-1",
+    const suiteTask: TaskLike = {
       type: "suite",
-      meta: {},
       file: { filepath: join(projectRoot, "tests/foo.spec.ts") },
-    } as unknown as Task;
+    };
     ctx.state.idMap.set("suite-1", suiteTask);
 
     reporter.onTaskUpdate([
