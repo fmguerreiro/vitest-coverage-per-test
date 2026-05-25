@@ -5,7 +5,7 @@ import type { ReporterOptions, PerTestMeta } from "./types.js";
  * we type only the fields we read and let vitest dispatch to these methods by
  * name at runtime.
  */
-interface VitestLike {
+export interface VitestLike {
     config: {
         root: string;
     };
@@ -13,13 +13,13 @@ interface VitestLike {
         idMap: Map<string, TaskLike>;
     };
 }
-interface TaskLike {
+export interface TaskLike {
     type: string;
     file: {
         filepath: string;
     };
 }
-type TaskResultPackLike = [id: string, result: unknown, meta?: PerTestMeta];
+export type TaskResultPackLike = [id: string, result: unknown, meta?: PerTestMeta];
 /**
  * Local reporter contract. vitest's own Reporter export is unavailable in v4,
  * so we name the hooks we implement here to keep method-name and signature
